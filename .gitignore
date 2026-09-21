@@ -1,0 +1,32 @@
+# Python environments and caches
+.venv/
+backend/.venv/
+**/__pycache__/
+*.py[cod]
+
+# Local application state
+backend/*.db
+backend/.env
+artifacts/
+backend/local_training_output/
+local_trainer/.venv/
+local_trainer/gan_output/
+local_trainer/local_training_output/
+
+# Extracted/generated media and source videos
+vedio/*.mp4
+vedio/*.avi
+vedio/*.mov
+vedio/*.mkv
+vedio/*.webm
+vedio/extracted_images/
+frontend/trainer/generated/
+*.jpg
+*.jpeg
+*.png
+*.webp
+
+# Editor and OS files
+.vscode/
+.DS_Store
+Thumbs.db

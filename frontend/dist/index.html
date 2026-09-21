@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PhoenixML Dashboard</title>
+    <style>
+      :root {
+        --bg: #07111d;
+        --panel: rgba(15, 23, 42, 0.9);
+        --panel-2: rgba(255,255,255,0.04);
+        --text: #ebf3ff;
+        --muted: #9bb0c8;
+        --blue: #3b82f6;
+        --safe: #22c55e;
+        --warning: #fbbf24;
+        --critical: #f87171;
+        --danger: #ef4444;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(180deg, #07111d 0%, #0f172a 100%);
+        color: var(--text);
+      }
+      button, input, select { font: inherit; }
+      .login-shell {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px;
+      }
+      .login-box {
+        width: min(420px, 100%);
+        background: rgba(15, 23, 42, 0.96);
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 18px;
+        padding: 32px 28px;
+        box-shadow: 0 20px 50px rgba(0,0,0,0.35);
+      }
+      .brand { text-align: center; margin-bottom: 18px; }
+      .brand .kicker {
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+        color: #8ab4f8;
+      }
+      .brand h1 { margin: 10px 0 0; font-size: 38px; }
+      .login-box form, .form-grid {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+      }
+      label {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        color: var(--muted);
+        font-size: 14px;
+      }
+      input, select {
+        border: 1px solid rgba(148,163,184,0.25);
+        background: rgba(15,23,42,0.7);
+        color: white;
+        border-radius: 10px;
+        padding: 12px 14px;
+      }
+      .primary-btn, .secondary-btn, .small-btn {
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .primary-btn {
+        background: linear-gradient(135deg, #2563eb, #3b82f6);
+        color: white;
+        padding: 12px 16px;
+      }
+      .secondary-btn {
+        background: rgba(59,130,246,0.12);
+        color: #dbeafe;
+        border: 1px solid rgba(96,165,250,0.35);
+        padding: 10px 14px;
+      }
+      .small-btn {
+        background: rgba(34,197,94,0.12);
+        color: #bbf7d0;
+        border: 1px solid rgba(34,197,94,0.25);
+        padding: 8px 12px;
+      }
+      .alert {
+        background: rgba(248,113,113,0.12);
+        border: 1px solid rgba(248,113,113,0.5);
+        color: #fecaca;
+        padding: 10px 12px;
+        border-radius: 9px;
+        font-size: 13px;
+      }
+      .demo-note {
+        margin-top: 18px;
+        text-align: center;
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .dashboard-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 28px 22px 60px;
+      }
+      .topbar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+      }
+      .topbar h2 { margin: 0; font-size: 36px; }
+      .tabs {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .tab {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(148,163,184,0.18);
+        color: var(--text);
+        border-radius: 10px;
+        padding: 10px 14px;
+        cursor: pointer;
+      }
+      .tab.active {
+        background: rgba(59,130,246,0.15);
+        border-color: rgba(96,165,250,0.45);
+      }
+      .metrics {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 16px;
+        margin-bottom: 26px;
+      }
+      .card {
+        background: var(--panel-2);
+        border: 1px solid rgba(148,163,184,0.15);
+        border-radius: 14px;
+        padding: 18px 20px;
+      }
+      .card span {
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+      }
+      .card strong {
+        display: block;
+        font-size: 28px;
+        margin-top: 10px;
+      }
+      .card.safe strong { color: var(--safe); }
+      .card.warning strong { color: var(--warning); }
+      .card.critical strong { color: var(--critical); }
+      .card.info strong { color: #8ab4f8; }
+      .panel {
+        background: var(--panel);
+        border: 1px solid rgba(148,163,184,0.18);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 18px;
+      }
+      .explain {
+        color: var(--muted);
+        margin: 0;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+      }
+      th, td {
+        text-align: left;
+        padding: 14px 10px;
+        border-bottom: 1px solid rgba(148,163,184,0.12);
+      }
+      .badge {
+        display: inline-block;
+        padding: 6px 10px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge.healthy { background: rgba(34,197,94,.18); color: #86efac; }
+      .badge.warning { background: rgba(251,191,36,.18); color: #fcd34d; }
+      .badge.critical { background: rgba(248,113,113,.18); color: #fca5a5; }
+      .pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(59,130,246,0.12);
+        border: 1px solid rgba(96,165,250,0.35);
+        border-radius: 999px;
+        padding: 7px 12px;
+        color: #dbeafe;
+      }
+      .actions {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-top: 14px;
+      }
+      .grid-two {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 18px;
+      }
+      .smalltext { font-size: 12px; color: var(--muted); }
+      .generated-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 14px;
+        margin-top: 16px;
+      }
+      .generated-grid img {
+        width: 100%;
+        aspect-ratio: 1;
+        object-fit: pixelated;
+        image-rendering: pixelated;
+        border-radius: 10px;
+        border: 1px solid rgba(148,163,184,0.2);
+      }
+      .generated-grid a { color: #bfdbfe; font-size: 12px; }
+    </style>
+  </head>
+  <body>
+    <div id="loginScreen" class="login-shell">
+      <div class="login-box">
+        <div class="brand">
+          <div class="kicker">MLOps decision support</div>
+          <h1>PhoenixML</h1>
+        </div>
+
+        <form id="loginForm">
+          <label>
+            Username
+            <input id="username" type="text" placeholder="admin" />
+          </label>
+
+          <label>
+            Password
+            <input id="password" type="password" placeholder="admin123" />
+          </label>
+
+          <button class="primary-btn" type="submit">Sign in</button>
+        </form>
+
+        <div id="alertBox" class="alert" style="margin-top: 16px;" hidden></div>
+
+        <div class="demo-note">Demo login: admin / admin123</div>
+      </div>
+    </div>
+
+    <div id="dashboardScreen" class="dashboard-shell" hidden>
+      <header class="topbar">
+        <div>
+          <div class="smalltext">Operator dashboard</div>
+          <h2>PhoenixML</h2>
+        </div>
+        <div class="actions">
+          <a class="secondary-btn" href="/trainer/" style="text-decoration: none;">Open Training Lab</a>
+          <div class="pill">Logged in as Admin</div>
+        </div>
+      </header>
+
+      <nav class="tabs">
+        <button id="overviewTab" class="tab active" type="button">Overview</button>
+        <button id="modelTab" class="tab" type="button">Models</button>
+      </nav>
+
+      <section class="metrics" id="metricsContainer"></section>
+
+      <section class="panel">
+        <p id="explanationText" class="explain"></p>
+      </section>
+
+      <div class="grid-two">
+        <section class="panel">
+          <h3>Register a model</h3>
+          <form id="modelForm" class="form-grid">
+            <label>
+              Model name
+              <input id="modelName" type="text" placeholder="SpamGuard-v2" required />
+            </label>
+            <label>
+              Algorithm
+              <select id="modelAlgorithm">
+                <option value="image-recognition">Image Recognition</option>
+                <option value="vision-classifier">Vision Classifier</option>
+                <option value="spam-classifier">Spam Classifier</option>
+                <option value="logistic-regression">Logistic Regression</option>
+                <option value="random-forest">Random Forest</option>
+              </select>
+            </label>
+            <button class="secondary-btn" type="submit">Register model</button>
+          </form>
+        </section>
+
+        <section class="panel">
+          <h3>Submit monitoring observation</h3>
+          <form id="monitoringForm" class="form-grid">
+            <label>
+              Select model
+              <select id="selectedModel"></select>
+            </label>
+            <label>
+              F1 Score
+              <input id="f1Score" type="number" step="0.01" value="0.88" min="0" max="1" />
+            </label>
+            <label>
+              Accuracy
+              <input id="accuracy" type="number" step="0.01" value="0.9" min="0" max="1" />
+            </label>
+            <button class="secondary-btn" type="submit">Send telemetry</button>
+          </form>
+        </section>
+      </div>
+
+      <section class="panel">
+        <h3>Generate an image</h3>
+        <p class="explain">Create a synthetic sample with the GAN-style demo generator.</p>
+        <form id="generationForm" class="form-grid" style="margin-top: 16px;" onsubmit="return false;">
+          <label>
+            Visual style
+            <select id="generationStyle">
+              <option value="nature">Nature</option>
+              <option value="city">City</option>
+              <option value="portrait">Portrait</option>
+              <option value="object">Object</option>
+            </select>
+          </label>
+          <label>
+            Number of images
+            <input id="generationCount" type="number" min="1" max="4" value="1" />
+          </label>
+          <button class="secondary-btn" type="submit">Generate images</button>
+        </form>
+        <div id="generatedImages" class="generated-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="actions">
+          <button id="evaluateBtn" class="small-btn" type="button">Evaluate models</button>
+          <button id="logoutBtn" class="secondary-btn" type="button">Log out</button>
+        </div>
+        <table>
+          <thead>
+            <tr>
+              <th>Model</th>
+              <th>Status</th>
+              <th>Health</th>
+              <th>Action</th>
+              <th>Drift</th>
+            </tr>
+          </thead>
+          <tbody id="modelTableBody"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <script src="/ui/app.js?v=2"></script>
+  </body>
+</html>

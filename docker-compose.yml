@@ -1,0 +1,30 @@
+version: '3.9'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: phoenixml-db
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-phoenixml}
+      POSTGRES_USER: ${POSTGRES_USER:-phoenixml}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-phoenixmlpass}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build: ./backend
+    container_name: phoenixml-api
+    depends_on:
+      - db
+    environment:
+      DATABASE_URL: postgresql+psycopg2://phoenixml:phoenixmlpass@db:5432/phoenixml
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-this-to-a-long-random-secret}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-http://localhost:8000}
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:

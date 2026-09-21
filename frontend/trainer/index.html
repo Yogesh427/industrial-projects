@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Forge Lab | PhoenixML</title>
+  <link rel="stylesheet" href="/trainer/styles.css" />
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <a class="wordmark" href="/trainer/">FORGE <span>LAB</span></a>
+      <div class="top-actions"><span id="sessionState">Not connected</span><a href="/ui/">Monitoring UI</a></div>
+    </header>
+
+    <section class="intro">
+      <div>
+        <p class="eyebrow">PhoenixML / Model workshop</p>
+        <h1>Train, remix, improve.</h1>
+        <p class="subtitle">Prepare a dataset, run a focused model experiment, then create controlled variants for the next training cycle.</p>
+      </div>
+      <div class="status-orb"><span></span><small>LAB READY</small></div>
+    </section>
+
+    <section class="workspace">
+      <aside class="sidebar">
+        <div class="step active"><b>01</b><span>Dataset</span><small>Input and inspect</small></div>
+        <div class="step"><b>02</b><span>Algorithm</span><small>Choose a trainer</small></div>
+        <div class="step"><b>03</b><span>Experiment</span><small>Train and score</small></div>
+        <div class="step"><b>04</b><span>Augment</span><small>Generate new rows</small></div>
+      </aside>
+
+      <section class="content">
+        <div id="authPanel" class="auth-panel">
+          <label>Username<input id="username" value="admin" /></label>
+          <label>Password<input id="password" type="password" value="admin123" /></label>
+          <button id="loginButton" class="button dark">Connect workspace</button>
+        </div>
+
+        <div class="panel dataset-panel">
+          <div class="panel-heading"><div><p class="eyebrow">01 / Dataset</p><h2>Bring your training data</h2></div><label class="file-button">Import CSV<input id="fileInput" type="file" accept=".csv,text/csv" /></label></div>
+          <p class="hint">Use a header row. Include <code>label</code>, <code>class</code>, or <code>target</code> for supervised training.</p>
+          <textarea id="dataset" spellcheck="false">text,label
+free shipping today,ham
+claim your prize now,spam
+project meeting at ten,ham
+limited offer click here,spam
+invoice attached for review,ham</textarea>
+          <div id="imageUploadArea" class="image-upload" hidden>
+            <label class="file-button">Choose image files<input id="imageInput" type="file" accept="image/png,image/jpeg,image/webp" multiple /></label>
+            <span id="imageSummary">PNG, JPG, or WEBP. Use names like cat_01.jpg and dog_01.jpg to create labels.</span>
+            <button id="continueTrainingButton" class="button accent" type="button" hidden>Continue to training</button>
+          </div>
+          <div class="dataset-footer"><button id="inspectButton" class="button light">Inspect dataset</button><span id="datasetSummary">Not inspected</span></div>
+        </div>
+
+        <div class="panel algorithm-panel">
+          <div class="panel-heading"><div><p class="eyebrow">02 / Algorithm</p><h2>Select your experiment</h2></div><span class="chip">5 available</span></div>
+          <div class="algorithm-grid">
+            <label class="algorithm selected"><input type="radio" name="algorithm" value="spam-classifier" checked /><strong>Spam classifier</strong><span>Text intent and filtering</span></label>
+            <label class="algorithm"><input type="radio" name="algorithm" value="image-recognition" /><strong>Image recognition</strong><span>Image labels and features</span></label>
+            <label class="algorithm"><input type="radio" name="algorithm" value="vision-classifier" /><strong>Vision classifier</strong><span>Visual category detection</span></label>
+            <label class="algorithm"><input type="radio" name="algorithm" value="logistic-regression" /><strong>Logistic regression</strong><span>Binary numeric outcomes</span></label>
+            <label class="algorithm"><input type="radio" name="algorithm" value="random-forest" /><strong>Random forest</strong><span>Mixed features and labels</span></label>
+          </div>
+          <button id="trainButton" class="button accent">Train model</button>
+        </div>
+
+        <div class="results-grid">
+          <div class="panel result-panel"><p class="eyebrow">03 / Experiment</p><h2>Training result</h2><div id="trainingResult" class="empty">Run an experiment to see validation scores.</div></div>
+          <div class="panel augment-panel"><p class="eyebrow">04 / Augment</p><h2>Generate next data</h2><div class="mode-toggle"><button data-mode="similar" class="mode active">Similar</button><button data-mode="different" class="mode">Different</button></div><label>Rows to create<input id="rowCount" type="number" min="1" max="100" value="8" /></label><button id="generateButton" class="button dark">Generate dataset</button><div id="generatedResult" class="empty">Create variants after loading your data.</div><a id="downloadLink" class="download" hidden>Download generated CSV</a></div>
+        </div>
+      </section>
+    </section>
+  </main>
+  <script src="/trainer/app.js?v=5"></script>
+</body>
+</html>
