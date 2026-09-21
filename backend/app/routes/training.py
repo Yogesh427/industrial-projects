@@ -26,6 +26,10 @@ SUPPORTED_ALGORITHMS = {
 }
 
 
+def normalize_algorithm(value: Any) -> str:
+    return str(value or "").strip().lower().replace("_", "-").replace(" ", "-")
+
+
 def authenticate(token: str) -> None:
     try:
         decode_token(token)
@@ -160,7 +164,7 @@ async def generate_real_images(
 @router.post("/training/train")
 def train_model(payload: dict[str, Any], token: str = Depends(oauth2_scheme)):
     authenticate(token)
-    algorithm = str(payload.get("algorithm", "")).lower()
+    algorithm = normalize_algorithm(payload.get("algorithm"))
     if algorithm not in SUPPORTED_ALGORITHMS:
         raise HTTPException(status_code=400, detail="Unsupported training algorithm.")
 
