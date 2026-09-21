@@ -130,7 +130,10 @@ $('trainButton').addEventListener('click', async () => {
     show('Training in progress...');
     const data = await api('/training/train', { data: csvData(), algorithm: algorithm() });
     const compute = data.compute ? `${data.compute.backend.toUpperCase()} / ${data.compute.device}` : 'CPU parallel';
-    $('trainingResult').innerHTML = `<div class="metric-row"><div class="metric"><small>Accuracy</small><strong>${data.metrics.accuracy}</strong></div><div class="metric"><small>Validation</small><strong>${data.metrics.validation_score}</strong></div><div class="metric"><small>Rows</small><strong>${data.rows_used}</strong></div></div><p class="hint">${data.message} Compute: ${compute}. Features: ${data.features.join(', ')}</p>`;
+    const metrics = data.metric_type === 'regression'
+      ? `<div class="metric"><small>R2 score</small><strong>${data.metrics.r2}</strong></div><div class="metric"><small>MAE</small><strong>${data.metrics.mae}</strong></div><div class="metric"><small>RMSE</small><strong>${data.metrics.rmse}</strong></div>`
+      : `<div class="metric"><small>Accuracy</small><strong>${data.metrics.accuracy}</strong></div><div class="metric"><small>F1 score</small><strong>${data.metrics.validation_score}</strong></div><div class="metric"><small>Rows</small><strong>${data.rows_used}</strong></div>`;
+    $('trainingResult').innerHTML = `<div class="metric-row">${metrics}</div><p class="hint">${data.message} Compute: ${compute}. Features: ${data.features.join(', ')}</p><p class="hint">Saved artifact: ${data.artifact_id}</p>`;
   } catch (error) { show(error.message, 'error'); }
 });
 

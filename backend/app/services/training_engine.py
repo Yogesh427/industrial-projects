@@ -29,6 +29,60 @@ def _split(values, labels):
     return train_test_split(values, labels, test_size=0.2, random_state=42, stratify=labels)
 
 
+def _numeric_features(rows: list[dict[str, str]], target_column: str) -> tuple[np.ndarray, list[str]]:
+    from sklearn.impute import SimpleImputer
+
+    columns = [key for key in rows[0] if key != target_column and key.lower() not in {"filename", "mode", "text"}]
+    if not columns:
+        raise ValueError("Add numeric feature columns before training.")
+    try:
+        values = np.array([[float(row.get(column, 0) or 0) for column in columns] for row in rows], dtype=float)
+    except ValueError as error:
+        raise ValueError("This model requires numeric feature columns.") from error
+    return SimpleImputer(strategy="median").fit_transform(values), columns
+
+
+def _train_linear_regression(rows: list[dict[str, str]]) -> dict:
+    from sklearn.linear_model import LinearRegression
+    from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+    from sklearn.model_selection import train_test_split
+
+    target_column = _label_column(rows)
+    if not target_column:
+        raise ValueError("Linear Regression needs a target column named target, label, or class.")
+    try:
+        targets = np.array([float(row[target_column]) for row in rows], dtype=float)
+    except ValueError as error:
+        raise ValueError("Linear Regression target values must be numeric, for example 12.5.") from error
+    values, feature_columns = _numeric_features(rows, target_column)
+    if len(rows) >= 6:
+        train_values, validation_values, train_targets, validation_targets = train_test_split(values, targets, test_size=0.2, random_state=42)
+    else:
+        train_values, validation_values, train_targets, validation_targets = values, values, targets, targets
+    model = LinearRegression().fit(train_values, train_targets)
+    predictions = model.predict(validation_values)
+    artifact_id = f"{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{uuid.uuid4().hex[:8]}"
+    ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
+    artifact_path = ARTIFACT_DIR / f"{artifact_id}.pkl"
+    with artifact_path.open("wb") as artifact_file:
+        pickle.dump(model, artifact_file)
+    return {
+        "artifact_id": artifact_id,
+        "artifact_path": str(artifact_path),
+        "algorithm": "linear-regression",
+        "rows_used": len(rows),
+        "features": feature_columns,
+        "labels": [],
+        "metrics": {
+            "r2": round(float(r2_score(validation_targets, predictions)), 3),
+            "mae": round(float(mean_absolute_error(validation_targets, predictions)), 3),
+            "rmse": round(float(mean_squared_error(validation_targets, predictions) ** 0.5), 3),
+        },
+        "metric_type": "regression",
+        "compute": runtime_info(),
+    }
+
+
 def _train_vision(rows: list[dict[str, str]], algorithm: str) -> dict:
     import torch
     from torch import nn
@@ -80,6 +134,8 @@ def _train_vision(rows: list[dict[str, str]], algorithm: str) -> dict:
 
 
 def train(rows: list[dict[str, str]], algorithm: str) -> dict:
+    if algorithm == "linear-regression":
+        return _train_linear_regression(rows)
     if algorithm in {"image-recognition", "vision-classifier"}:
         return _train_vision(rows, algorithm)
 
@@ -138,5 +194,6 @@ def train(rows: list[dict[str, str]], algorithm: str) -> dict:
             "accuracy": round(float(accuracy_score(validation_labels, predictions)), 3),
             "validation_score": round(float(f1_score(validation_labels, predictions, average="weighted", zero_division=0)), 3),
         },
+        "metric_type": "classification",
         "compute": runtime_info(),
     }

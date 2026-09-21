@@ -21,6 +21,7 @@ SUPPORTED_ALGORITHMS = {
     "vision-classifier",
     "spam-classifier",
     "logistic-regression",
+    "linear-regression",
     "random-forest",
 }
 
