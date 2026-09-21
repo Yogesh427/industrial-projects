@@ -52,4 +52,4 @@ def create_model(payload: dict, token: str = Depends(oauth2_scheme), db: Session
     db.add(model)
     db.commit()
     db.refresh(model)
-    return {"id": model.id, "name": model.name, "status": model.status}
+    return {"id": model.id, "name": model.name, "algorithm": model.algorithm, "status": model.status}

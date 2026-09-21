@@ -310,12 +310,12 @@
               <select id="selectedModel"></select>
             </label>
             <label>
-              F1 Score
-              <input id="f1Score" type="number" step="0.01" value="0.88" min="0" max="1" />
+              <span id="metricOneLabel">Accuracy</span>
+              <input id="metricOne" type="number" step="0.01" value="0.90" min="0" max="1" />
             </label>
             <label>
-              Accuracy
-              <input id="accuracy" type="number" step="0.01" value="0.9" min="0" max="1" />
+              <span id="metricTwoLabel">F1 Score</span>
+              <input id="metricTwo" type="number" step="0.01" value="0.88" min="0" max="1" />
             </label>
             <button class="secondary-btn" type="submit">Send telemetry</button>
           </form>

@@ -89,7 +89,17 @@ function renderTable() {
 }
 
 function renderModelOptions() {
-  selectedModel.innerHTML = state.models.map(model => `<option value="${model.id}">${model.name}</option>`).join('');
+  selectedModel.innerHTML = state.models.map(model => `<option value="${model.id}" data-algorithm="${model.algorithm || ''}">${model.name} (${model.algorithm || 'model'})</option>`).join('');
+  updateTelemetryFields();
+}
+
+function updateTelemetryFields() {
+  const model = state.models.find(item => String(item.id) === String(selectedModel.value));
+  const regression = model?.algorithm === 'linear-regression';
+  document.getElementById('metricOneLabel').textContent = regression ? 'R2 Score' : 'Accuracy';
+  document.getElementById('metricTwoLabel').textContent = regression ? 'RMSE (reference)' : 'F1 Score';
+  document.getElementById('metricOne').value = regression ? '0.90' : '0.90';
+  document.getElementById('metricTwo').value = regression ? '0.10' : '0.88';
 }
 
 function setActiveTab(tab) {
@@ -136,10 +146,11 @@ async function loadDashboard() {
   const data = await response.json();
   if (Array.isArray(data.models) && data.models.length > 0) {
     state.models = data.models.map((model, index) => ({
-      id: `server-${index + 1}`,
+      id: model.id,
       name: model.model,
+      algorithm: model.algorithm,
       status: model.latest_health === 'UNKNOWN' ? 'WARNING' : model.latest_health,
-      health: 80 + index * 5,
+      health: Number(model.latest_health_score || 0),
       action: model.latest_health === 'UNKNOWN' ? 'INCREASED_MONITORING' : 'CONTINUE_MONITORING',
       drift: model.latest_health === 'UNKNOWN' ? 'Moderate' : 'Low',
     }));
@@ -172,10 +183,11 @@ async function createModel(event) {
     state.models.push({
       id: model.id,
       name: model.name,
-      status: 'HEALTHY',
-      health: 88.0,
-      action: 'CONTINUE_MONITORING',
-      drift: 'Low'
+      algorithm: model.algorithm,
+      status: 'UNKNOWN',
+      health: 0,
+      action: 'AWAITING_TELEMETRY',
+      drift: 'Unknown'
     });
     renderMetrics();
     renderTable();
@@ -190,8 +202,10 @@ async function sendTelemetry(event) {
   event.preventDefault();
   const token = localStorage.getItem('phoenixml-token');
   const modelId = selectedModel.value;
-  const f1 = Number(document.getElementById('f1Score').value || 0.8);
-  const accuracy = Number(document.getElementById('accuracy').value || 0.8);
+  const model = state.models.find(item => String(item.id) === String(modelId));
+  const metricOne = Number(document.getElementById('metricOne').value || 0);
+  const metricTwo = Number(document.getElementById('metricTwo').value || 0);
+  const regression = model?.algorithm === 'linear-regression';
 
   if (!token || !modelId) return;
 
@@ -199,13 +213,12 @@ async function sendTelemetry(event) {
     total_predictions: 1200,
     spam_predictions: 540,
     ham_predictions: 660,
-    accuracy,
+    accuracy: regression ? metricOne : metricOne,
     precision: 0.82,
     recall: 0.8,
-    f1_score: f1,
-    health_score: (f1 * 100 + accuracy * 100) / 2,
-    health_status: f1 < 0.7 ? 'WARNING' : 'HEALTHY',
-    notes: 'Telemetry ingested during demo evaluation.'
+    f1_score: regression ? Math.max(0, 1 - metricTwo) : metricTwo,
+    r2_score: regression ? metricOne : undefined,
+    notes: regression ? 'Linear regression R2 and RMSE telemetry.' : `${model?.algorithm || 'model'} accuracy and F1 telemetry.`
   };
 
   const response = await fetch(`/api/models/${modelId}/monitoring`, {
@@ -221,7 +234,7 @@ async function sendTelemetry(event) {
     const entry = await response.json();
     const model = state.models.find((item) => item.id === modelId);
     if (model) {
-      model.health = Math.round((f1 * 100 + accuracy * 100) / 2 * 10) / 10;
+      model.health = Number(entry.health_score.toFixed(1));
       model.status = model.health >= 80 ? 'HEALTHY' : model.health >= 60 ? 'WARNING' : 'CRITICAL';
       model.action = model.status === 'HEALTHY' ? 'CONTINUE_MONITORING' : model.status === 'WARNING' ? 'HUMAN_REVIEW' : 'RETRAIN';
       model.drift = model.status === 'HEALTHY' ? 'Low' : model.status === 'WARNING' ? 'Moderate' : 'High';
@@ -297,6 +310,7 @@ generationForm.addEventListener('submit', async (event) => {
 overviewTab.addEventListener('click', () => setActiveTab('overview'));
 modelTab.addEventListener('click', () => setActiveTab('models'));
 evaluateBtn.addEventListener('click', evaluateModels);
+selectedModel.addEventListener('change', updateTelemetryFields);
 logoutBtn.addEventListener('click', () => {
   localStorage.removeItem('phoenixml-token');
   state.loggedIn = false;

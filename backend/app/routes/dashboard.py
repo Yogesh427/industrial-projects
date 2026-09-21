@@ -21,11 +21,15 @@ def dashboard(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)
     for model in models:
         observations = db.query(MonitoringObservation).filter(MonitoringObservation.model_id == model.id).all()
         decisions = db.query(DecisionLog).filter(DecisionLog.model_id == model.id).all()
+        latest_observation = observations[-1] if observations else None
         summary.append({
+            "id": model.id,
             "model": model.name,
+            "algorithm": model.algorithm,
             "status": model.status,
             "observations": len(observations),
             "recommendations": len(decisions),
-            "latest_health": observations[-1].health_status if observations else "UNKNOWN",
+            "latest_health": latest_observation.health_status if latest_observation else "UNKNOWN",
+            "latest_health_score": latest_observation.health_score if latest_observation else 0,
         })
     return {"models": summary}
